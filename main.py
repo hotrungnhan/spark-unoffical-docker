@@ -5,6 +5,7 @@ import subprocess
 import random
 import time
 import logging
+import json
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -16,20 +17,26 @@ def setup_logging():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def connection_status(driver):
-    if wait_for_element_exists(driver, By.XPATH, "//*[text()='Connected']"):
-        logging.info("Status: Connected!")
-    elif wait_for_element_exists(driver, By.XPATH, "//*[text()='Disconnected']"):
+    if wait_for_element_exists(driver, By.XPATH, "//*[text()='Online']"):
+        logging.info("Status: Online!")
+    elif wait_for_element_exists(driver, By.XPATH, "//*[text()='Offline']"):
         logging.warning("Status: Disconnected!")
     else:
         logging.warning("Status: Unknown!")
 
-def check_active_element(driver):
-    try:
-        wait_for_element(driver, By.XPATH, "//*[text()='Activated']")
-        driver.find_element(By.XPATH, "//*[text()='Activated']")
-        logging.info("Extension is activated!")
-    except NoSuchElementException:
-        logging.error("Failed to find 'Activated' element. Extension activation failed.")
+def set_local_storage_item(driver, key, value):
+    driver.execute_script(f"localStorage.setItem('{key}', '{value}');")
+    result = driver.execute_script(f"return localStorage.getItem('{key}');")
+    return result
+
+def add_cookie_to_local_storage(driver, cookie_value):
+    local_storage_items = {
+        'B7S_AUTH_TOKEN': cookie_value
+    }
+        
+    for key, value in local_storage_items.items():
+        result = set_local_storage_item(driver, key, cookie_value)
+        logging.info(f"Added {key} with value {result[:8]} to local storage.")
 
 def wait_for_element_exists(driver, by, value, timeout=10):
     try:
@@ -46,18 +53,28 @@ def wait_for_element(driver, by, value, timeout=10):
         logging.error(f"Error waiting for element {value}: {e}")
         raise
 
-def set_local_storage_item(driver, key, value):
-    driver.execute_script(f"localStorage.setItem('{key}', '{value}');")
-    result = driver.execute_script(f"return localStorage.getItem('{key}');")
-    return result
-
-def add_cookie_to_local_storage(driver, cookie_value):
-    keys = ['np_webapp_token', 'np_token']
-    for key in keys:
-        result = set_local_storage_item(driver, key, cookie_value)
-        logging.info(f"Added {key} with value {result[:8]}...{result[-8:]} to local storage.")
-    logging.info("!!!!! Your token can be used to login for 7 days !!!!!")
-
+def set_chrome_storage_item(driver, key, value):
+    obj = {
+        f'{key}': value
+    }
+    
+    driver.execute_script(f"chrome.storage.local.set(JSON.parse('{json.dumps(obj)}'));")
+    result = driver.execute_script(f"return chrome.storage.local.get('{key}');")
+    return json.dumps(result[key])
+    
+def add_node_key_to_chrome_storage(driver, priv_key, pub_key, jwt_cookie):
+    local_storage_items = {
+        'authToken':jwt_cookie, 
+        'nodeData':  {
+            'peerEncryptedPrivKey': priv_key,
+            'peerPubKey': pub_key
+        }
+    }
+    
+    for key, value in local_storage_items.items():
+        result = set_chrome_storage_item(driver, key, value)
+        logging.info(f"Added {key} with value {result[:8]} to local storage.")
+        
 def get_chromedriver_version():
     try:
         result = subprocess.run(['chromedriver', '--version'], capture_output=True, text=True)
@@ -87,7 +104,7 @@ def run():
     setup_logging()
     
     branch = ''
-    version = '1.0.9' + branch
+    version = '1.0.1' + branch
     secUntilRestart = 60
     logging.info(f"Started the script {version}")
 
@@ -96,13 +113,23 @@ def run():
         logging.info(f'OS Info: {os_info}')
         
         # Read variables from the OS env
-        cookie = os.getenv('NP_COOKIE')
+        cookie = os.getenv('BLESS_COOKIE')
         extension_id = os.getenv('EXTENSION_ID')
         extension_url = os.getenv('EXTENSION_URL')
 
+
+        node_private_key = os.getenv('NODE_PRIV_KEY')
+        node_public_key = os.getenv('NODE_PUB_KEY')
         # Check if credentials are provided
         if not cookie:
-            logging.error('No cookie provided. Please set the NP_COOKIE environment variable.')
+            logging.error('No cookie provided. Please set the BLESS_COOKIE environment variable.')
+            return  # Exit the script if credentials are not provided
+
+        if not node_private_key:
+            logging.error('No cookie provided. Please set the NODE_PRIV_KEY environment variable.')
+            return  # Exit the script if credentials are not provided
+        if not node_public_key:
+            logging.error('No cookie provided. Please set the NODE_PUB_KEY environment variable.')
             return  # Exit the script if credentials are not provided
 
         chrome_options = Options()
@@ -126,37 +153,47 @@ def run():
         # NodePass checks for width less than 1024p
         driver.set_window_size(1024, driver.get_window_size()['height'])
 
-        # Navigate to a webpage
-        logging.info(f'Navigating to {extension_url} website...')
-        driver.get(extension_url)
-        time.sleep(random.randint(3,7))
-
-        add_cookie_to_local_storage(driver, cookie)
-
-        # Check successful login
-        while not wait_for_element_exists(driver, By.XPATH, "//*[text()='Dashboard']"):
-            logging.info(f'Refreshing in {secUntilRestart} seconds to check login (If stuck, verify your token)...')
-            driver.get(extension_url)
-
-        logging.info('Logged in successfully!')
-
-        time.sleep(random.randint(10,50))
         logging.info('Accessing extension settings page...')
         driver.get(f'chrome-extension://{extension_id}/index.html')
+      
+            
         time.sleep(random.randint(3,7))
-
-        # Refresh until the "Login" button disappears
+    
+            
+        add_node_key_to_chrome_storage(driver, node_private_key, node_public_key, cookie)
+        logging.info("!!!!! Your token can be used to login for 365 days !!!!!")
+        logging.info("!!!!! Update Node Private/Public key when you retire it !!!!!")
+        driver.execute_script("window.open('about:blank', '_blank');")
+        driver.switch_to.window(driver.window_handles[1])
+        
+        logging.info('Get into dashboard page...')
+        driver.get(extension_url)
         while wait_for_element_exists(driver, By.XPATH, "//*[text()='Login']"):
-            logging.info('Clicking the extension login button...')
-            login = driver.find_element(By.XPATH, "//*[text()='Login']")
-            login.click()
-            time.sleep(10)
+            time.sleep(random.randint(3,7))
+            
+        logging.info('Add cookie to dashboard page ...')
+        # add cookies 
+        add_cookie_to_local_storage(driver, cookie)
+        
+        time.sleep(random.randint(3,7))
+        
+        driver.refresh()
+        # wait for dashboard 
+        while not wait_for_element_exists(driver, By.XPATH, "//*[text()='Dashboard']"):
+            logging.info(f'Refreshing in {secUntilRestart} seconds to check login (If stuck, verify your token)...')
+        
+        logging.info('Refresh Extensions page...')
+        driver.switch_to.window(driver.window_handles[0])
+        driver.refresh()
+        
+        
+        # Refresh until the page can accessiable
+        while not wait_for_element_exists(driver, By.XPATH, "//*[text()='Total Time']"):
+            time.sleep(random.randint(3,7))
             # Refresh the page
+            logging.info('Refresh...')
             driver.refresh()
-
-        # Check for the "Activated" element
-        check_active_element(driver)
-
+        
         # Get handles for all windows
         all_windows = driver.window_handles
 
