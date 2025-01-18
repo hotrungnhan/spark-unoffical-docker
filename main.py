@@ -109,7 +109,7 @@ def get_os_info():
 def main():
     setup_logging()
 
-    version = '1.0.0'
+    version = '1.0.2'
     restart_delay = 60
     logging.info(f"Script version: {version}")
 
@@ -125,7 +125,7 @@ def main():
         node_public_key = os.getenv('NODE_PUBLIC_KEY')
 
         if not all([cookie, node_private_key, node_public_key]):
-            logging.error("Missing required environment variables. Please set BLESS_COOKIE, NODE_PRIV_KEY, and NODE_PUB_KEY.")
+            logging.error("Missing required environment variables. Please set BLESS_AUTH_JWT, NODE_PRIVATE_KEY, and NODE_PUBLIC_KEY.")
             return
 
         chrome_options = Options()
