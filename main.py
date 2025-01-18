@@ -109,7 +109,7 @@ def get_os_info():
 def main():
     setup_logging()
 
-    version = '1.0.1'
+    version = '1.0.0'
     restart_delay = 60
     logging.info(f"Script version: {version}")
 
