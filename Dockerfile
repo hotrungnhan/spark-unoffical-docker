@@ -36,7 +36,6 @@ RUN apt update && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
-
 WORKDIR /app
 
 RUN git clone "https://github.com/${GIT_USERNAME}/${GIT_REPO}.git"

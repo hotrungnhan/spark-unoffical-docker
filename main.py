@@ -14,6 +14,38 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
+def mark_value(value):
+    # If the value is a dictionary, recursively mark its values
+    if isinstance(value, dict):
+        return {key: mark_value(val) for key, val in value.items()}
+
+    # If the value is a list, recursively mark each item in the list
+    elif isinstance(value, list):
+        return [mark_value(item) for item in value]
+
+    # If the value is a string, mask it by keeping the first 3 and last 3 digits, up to 3 stars in the middle
+    elif isinstance(value, str):
+        digits = value
+        if len(digits) > 40:
+            return (
+                digits[:5]
+                + "*" * 5
+                + digits[int(0.5 * len(digits)) - 5 : int(0.5 * len(digits)) + 5]
+                + "*" * 5
+                + digits[-5:]
+            )
+        elif len(digits) > 20:
+            return digits[:5] + "*" * 5 + digits[-5:]
+        elif len(digits) > 6:
+            return digits[:3] + "*" * 3 + digits[-3:]
+        else:
+            return value
+
+    # If it's a number, return the number as-is (we can customize for number handling if needed)
+    else:
+        return value
+
+
 # Setup logging configuration
 def setup_logging():
     logging.basicConfig(
@@ -34,10 +66,8 @@ def show_loading_animation(duration):
 def check_connection_status(driver):
     if wait_for_element_exists(driver, By.XPATH, "//*[text()='Spark is Connected']"):
         logging.info("Status: Connected!")
-        os.environ["APP_STATUS"] = "RUNNING"
     elif wait_for_element_exists(driver, By.XPATH, "//*[text()='Connect Spark']"):
         logging.warning("Status: Disconnected!")
-        os.environ["APP_STATUS"] = "RUNNING"
     else:
         logging.warning("Status: Unknown!")
 
@@ -135,7 +165,7 @@ def main():
     except Exception as e:
         logging.error(f"Initialization error: {e}")
         logging.error(f"Restarting in {restart_delay} seconds...")
-        time.sleep(restart_delay)
+        show_loading_animation(restart_delay)
         main()
         return
 
@@ -153,11 +183,15 @@ def main():
         logging.info("Login...")
 
         logging.info("Entering credentials...")
+
+        logging.info(f"Entering email: {mark_value(email)}")
         email_em = driver.find_element(
             By.XPATH, "//input[contains(@placeholder,'Email')]"
         )
 
         email_em.send_keys(email)
+        
+        logging.info(f"Entering email: {mark_value(password)}")
         passworld_em = driver.find_element(
             By.XPATH, "//input[contains(@placeholder,'Password')]"
         )
@@ -166,7 +200,6 @@ def main():
         logging.info("Clicking the login button...")
         login_em = driver.find_element(By.XPATH, "//button[text()='Login']")
         login_em.click()
-        logging.info("Waiting response...")
 
         while not wait_for_element_exists(driver, By.XPATH, "//*[text()='Dashboard']"):
             show_loading_animation(random.randint(1, 3))
@@ -205,7 +238,7 @@ def main():
         logging.error(f"An error occurred: {e}")
         logging.error(f"Restarting in {restart_delay} seconds...")
         driver.quit()
-        time.sleep(restart_delay)
+        show_loading_animation(restart_delay)
         main()
 
     while True:
