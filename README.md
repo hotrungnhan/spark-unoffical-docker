@@ -1,4 +1,4 @@
-# [Spark Chain Unoffical Docker](https://github.com/hotrungnhan/sparkchain-docker) 
+# [Spark Unoffical Docker](https://github.com/hotrungnhan/spark-unoffical-docker) 
 
 ## [Support me by register account with REF, thanks you !!!](https://sparkchain.ai/register/?r=46694143)
 # Setup
