@@ -32,7 +32,7 @@ await chrome.storage.local.get()
 #### Docker Compose
 ```
 services:
-  nodepay:
+  bless:
     image: hotrungnhan/bless
     restart: unless-stopped
     pull_policy: always
