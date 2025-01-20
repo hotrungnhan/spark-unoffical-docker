@@ -109,7 +109,7 @@ def get_os_info():
 def main():
     setup_logging()
 
-    version = '1.0.2'
+    version = '1.0.6'
     restart_delay = 60
     logging.info(f"Script version: {version}")
 
@@ -118,14 +118,14 @@ def main():
         logging.info(f"OS Info: {os_info}")
 
         # Read environment variables
-        cookie = os.getenv('BLESS_AUTH_JWT')
+        cookie = os.getenv('AUTH_JWT')
         extension_id = os.getenv('EXTENSION_ID')
-        extension_url = os.getenv('EXTENSION_URL')
+        web_url = os.getenv('WEB_URL')
         node_private_key = os.getenv('NODE_PRIVATE_KEY')
         node_public_key = os.getenv('NODE_PUBLIC_KEY')
 
         if not all([cookie, node_private_key, node_public_key]):
-            logging.error("Missing required environment variables. Please set BLESS_AUTH_JWT, NODE_PRIVATE_KEY, and NODE_PUBLIC_KEY.")
+            logging.error("Missing required environment variables. Please set AUTH_JWT, NODE_PRIVATE_KEY, and NODE_PUBLIC_KEY.")
             return
 
         chrome_options = Options()
@@ -158,7 +158,7 @@ def main():
         driver.execute_script("window.open('about:blank', '_blank');")
         driver.switch_to.window(driver.window_handles[1])
         logging.info("Navigating to dashboard page...")
-        driver.get(extension_url)
+        driver.get(web_url)
 
         while wait_for_element_exists(driver, By.XPATH, "//*[text()='Login']"):
             time.sleep(random.randint(3, 7))
@@ -207,7 +207,7 @@ def main():
         try:
             time.sleep(3600)
             driver.refresh()
-            connection_status(driver)
+            check_connection_status(driver)
         except KeyboardInterrupt:
             logging.info('Stopping the script...')
             driver.quit()

@@ -1,15 +1,32 @@
-# [Contact Me](https://kellphy.com/socials) 
-### But before, check the status of [Nodepay](https://app.nodepay.ai/dashboard)
-#### Also, [check out other passive income tools](https://kellphy.com/proxynode) that run with Docker, such as Grass, HoneyGain, Mysterium, and many others!
+# [Bless Unoffical Docker](https://github.com/hotrungnhan/Bless) 
+
+## [Support me by register account with REF, thanks you !!!](https://bless.network/dashboard?ref=NZ7IIO)
 # Setup
 1. [Download Docker Desktop](https://www.docker.com/products/docker-desktop).
-2. Login to [Nodepay](https://app.nodepay.ai/dashboard).
-3. Open `Developer Tools` and go to `Application(Chrome)` / `Storage(Firefox)`.
-4. Go to `Local Storage` > `https://app.nodepay.ai` and copy the value of `np_webapp_token` OR `np_token` (The big array of random numbers and letters). Token lifetime is 7 days.
-5. Replace `NP_COOKIE` with the value that you copied.
-6. Open CMD and use the Docker Run command of the built image from Docker Hub.
-7. Check and Manage the app from Docker Desktop > Containers.
-8. If you're stuck at checking login information, repeat steps 2 to 6.
+2. Login to [Bless](https://bless.network/dashboard).
+3. Download Extensions and start a node.
+4. Open [chrome-extension://pljbjcehnhcnofmkdbjolghdcjnmekia/index.html](chrome-extension://pljbjcehnhcnofmkdbjolghdcjnmekia/index.html)
+5. Inspect to get javascript console.
+6. Retrive key by type this javascript command.
+```javascript
+await chrome.storage.local.get()
+
+/*
+
+{
+    "authToken": "sample text",
+    "nodeData": {
+        "peerEncryptedPrivKey": "sample text",
+        "peerPubKey": "sample text"
+    }
+}
+
+*/
+```
+7. Replace `AUTH_JWT` with authToken, `NODE_PRIVATE_KEY` with peerEncryptedPrivKey, `NODE_PRIVATE_KEY`  with peerPubKey.
+8. Open CMD and use the Docker Run command of the built image from Docker Hub.
+9. Check and Manage the app from Docker Desktop > Containers.
+10. If you're container stuck at any step, please verify your credential.
 # Usage Options
 ## A) Use built image from [Docker Hub](https://hub.docker.com/r/kellphy/nodepay)
 #### Docker Compose
@@ -17,41 +34,26 @@
 services:
   nodepay:
     container_name: Nodepay
-    image: kellphy/nodepay
+    image: hotrungnhan/bless
     restart: unless-stopped
     pull_policy: always
     environment:
-      - NP_COOKIE=YOURCOOKIE
+      - AUTH_JWT=your_key
+      - NODE_PRIVATE_KEY=your_key
+      - NODE_PUBLIC_KEY=your_key
 ```
-#### Docker Run
+## B) Docker Run
 ```
 docker run -d \
   --name Nodepay \
   --restart unless-stopped \
   --pull always \
-  -e NP_COOKIE="YOURCOOKIE" \
-  kellphy/nodepay
+  -e AUTH_JWT="your_key" \
+  -e NODE_PRIVATE_KEY="your_key" \
+  -e NODE_PUBLIC_KEY="your_key" \
+  hotrungnhan/bless
 ```
-## B) Build it yourself from [GitHub](https://github.com/Kellphy/Nodepay) 
-#### Docker Compose
-```
-services:
-  nodepay:
-    container_name: Nodepay
-    image: nodepay
-    restart: unless-stopped
-    build:
-      context: .
-      dockerfile: Dockerfile
-    environment:
-      - NP_COOKIE=YOURCOOKIE
-```
-#### Docker Run
-```
-docker build -t nodepay . && \
-docker run -d \
-  --name Nodepay \
-  --restart unless-stopped \
-  -e NP_COOKIE="YOURCOOKIE" \
-  nodepay
-```
+
+# Credit 
+* [Kellphy](https://github.com/Kellphy)
+* * [MRColorR](https://github.com/MRColorR)
