@@ -34,4 +34,4 @@ docker run -d \
 
 # Credit 
 * [Kellphy](https://github.com/Kellphy)
-* * [MRColorR](https://github.com/MRColorR)
+* [MRColorR](https://github.com/MRColorR)
