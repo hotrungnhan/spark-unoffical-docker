@@ -1,15 +1,17 @@
 
 ARG EXTENSION_ID='jlpniknnodfkbmbgkjelcailjljlecch'
 ARG WEB_URL='https://sparkchain.ai/dashboard'
-
+ARG VERSION
 FROM debian:11-slim AS base 
 
 ARG EXTENSION_ID
 ARG WEB_URL
+ARG VERSION
 
 # Set environment variables
 ENV EXTENSION_ID=$EXTENSION_ID
 ENV WEB_URL=$WEB_URL
+ENV VERSION=${VERSION}
 
 FROM base AS downloader
 
@@ -33,9 +35,9 @@ RUN apt update && \
     apt autoremove --purge -y && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
-    
 
-    WORKDIR /app
+
+WORKDIR /app
 
 RUN git clone "https://github.com/${GIT_USERNAME}/${GIT_REPO}.git"
 
@@ -59,7 +61,7 @@ RUN apt update && \
     apt autoremove --purge -y && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
-    
+
 COPY --from=downloader /app/"${EXTENSION_ID}.crx" .
 
 COPY main.py .

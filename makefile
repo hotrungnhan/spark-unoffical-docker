@@ -5,7 +5,7 @@ export GIT_REPO=crx-dl
 export PUBLIC_CONTAINER_PATH=hotrungnhan/spark
 
 build: 
-	docker buildx build -t $(PUBLIC_CONTAINER_PATH):${version} -t $(PUBLIC_CONTAINER_PATH):latest --push .
+	docker buildx build --build-arg VERSION=${version} -t $(PUBLIC_CONTAINER_PATH):${version} -t $(PUBLIC_CONTAINER_PATH):latest --push .
 
 test:
   docker run -d \
@@ -15,6 +15,7 @@ test:
   $(PUBLIC_CONTAINER_PATH):${version}
   
 test_local:
+	DISABLE_HEADLESS=True \
 	EXTENSION_ID=${EXTENSION_ID} \
 	WEB_URL="${WEB_URL}" \
 	EMAIL="${email}" \
