@@ -33,7 +33,6 @@ await chrome.storage.local.get()
 ```
 services:
   nodepay:
-    container_name: Nodepay
     image: hotrungnhan/bless
     restart: unless-stopped
     pull_policy: always
@@ -45,7 +44,6 @@ services:
 ## B) Docker Run
 ```
 docker run -d \
-  --name Nodepay \
   --restart unless-stopped \
   --pull always \
   -e AUTH_JWT="your_key" \
