@@ -1,6 +1,6 @@
 
-ARG EXTENSION_ID='pljbjcehnhcnofmkdbjolghdcjnmekia'
-ARG WEB_URL='https://bless.network/dashboard'
+ARG EXTENSION_ID='jlpniknnodfkbmbgkjelcailjljlecch'
+ARG WEB_URL='https://sparkchain.ai/dashboard'
 
 FROM debian:11-slim AS base 
 

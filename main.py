@@ -19,6 +19,7 @@ def setup_logging():
 
 # Display CLI loading animation
 def show_loading_animation(duration):
+    random
     for _ in range(duration):
         for frame in "|/-\\":
             print(f"\rLoading... {frame}", end="", flush=True)
@@ -34,18 +35,6 @@ def check_connection_status(driver):
     else:
         logging.warning("Status: Unknown!")
 
-# Set localStorage item
-def set_local_storage(driver, key, value):
-    driver.execute_script(f"localStorage.setItem('{key}', '{value}');")
-    return driver.execute_script(f"return localStorage.getItem('{key}');")
-
-# Add cookie to localStorage
-def add_cookie_to_local_storage(driver, cookie):
-    local_storage_items = {'B7S_AUTH_TOKEN': cookie}
-    for key, value in local_storage_items.items():
-        result = set_local_storage(driver, key, value)
-        logging.info(f"Added {key} with value {result[:8]} to local storage.")
-
 # Wait for an element to exist
 def wait_for_element_exists(driver, by, value, timeout=10):
     try:
@@ -54,6 +43,7 @@ def wait_for_element_exists(driver, by, value, timeout=10):
     except TimeoutException:
         return False
 
+
 # Wait for an element to be present
 def wait_for_element(driver, by, value, timeout=10):
     try:
@@ -61,26 +51,6 @@ def wait_for_element(driver, by, value, timeout=10):
     except TimeoutException as e:
         logging.error(f"Error waiting for element {value}: {e}")
         raise
-
-# Set Chrome storage item
-def set_chrome_storage(driver, key, value):
-    obj = {key: value}
-    driver.execute_script(f"chrome.storage.local.set(JSON.parse('{json.dumps(obj)}'));")
-    result = driver.execute_script(f"return chrome.storage.local.get('{key}');")
-    return json.dumps(result[key])
-
-# Add node key to Chrome storage
-def add_node_keys_to_storage(driver, private_key, public_key, jwt_token):
-    storage_items = {
-        'authToken': jwt_token,
-        'nodeData': {
-            'peerEncryptedPrivKey': private_key,
-            'peerPubKey': public_key
-        }
-    }
-    for key, value in storage_items.items():
-        result = set_chrome_storage(driver, key, value)
-        logging.info(f"Added {key} with value {result[:8]} to storage.")
 
 # Get ChromeDriver version
 def get_chromedriver_version():
@@ -118,14 +88,14 @@ def main():
         logging.info(f"OS Info: {os_info}")
 
         # Read environment variables
-        cookie = os.getenv('AUTH_JWT')
         extension_id = os.getenv('EXTENSION_ID')
         web_url = os.getenv('WEB_URL')
-        node_private_key = os.getenv('NODE_PRIVATE_KEY')
-        node_public_key = os.getenv('NODE_PUBLIC_KEY')
+        
+        email = os.getenv('EMAIL')
+        password = os.getenv('PASSWORD')
 
-        if not all([cookie, node_private_key, node_public_key]):
-            logging.error("Missing required environment variables. Please set AUTH_JWT, NODE_PRIVATE_KEY, and NODE_PUBLIC_KEY.")
+        if not all([email, password]):
+            logging.error("Missing required environment variables. Please set EMAIL, PASSWORD.")
             return
 
         chrome_options = Options()
@@ -147,37 +117,51 @@ def main():
         return
 
     try:
+        # logins
         driver.set_window_size(1024, driver.get_window_size()['height'])
-        logging.info("Accessing extension settings page...")
-        driver.get(f"chrome-extension://{extension_id}/index.html")
-        show_loading_animation(5)
-
-        add_node_keys_to_storage(driver, node_private_key, node_public_key, cookie)
-        logging.info("Token valid for 365 days. Update keys as necessary.")
-
-        driver.execute_script("window.open('about:blank', '_blank');")
-        driver.switch_to.window(driver.window_handles[1])
-        logging.info("Navigating to dashboard page...")
+        logging.info("Accessing spark dashboard page...")
         driver.get(web_url)
-
+        
+        show_loading_animation(random.randint(1, 3))
+        
         while wait_for_element_exists(driver, By.XPATH, "//*[text()='Login']"):
-            time.sleep(random.randint(3, 7))
+            show_loading_animation(random.randint(1, 3))
+            
+        logging.info("Login...")
+        
+        logging.info('Entering credentials...')
+        email_em = browser.find_element(By.XPATH, "//input[contains(@placeholder,'Email')]")
 
-        add_cookie_to_local_storage(driver, cookie)
-        time.sleep(random.randint(3, 7))
-        driver.refresh()
+        email_em.send_keys(email)
+        passworld_em = browser.find_element(By.XPATH, "//input[contains(@placeholder,'Password')]")
+        passworld_em.send_keys(password)
+        
+        logging.info('Clicking the login button...')
+        login_em = driver.find_element(By.XPATH, "//button[text()='Login']")
+        login_em.click()
+        logging.info('Waiting response...')
 
-        while not wait_for_element_exists(driver, By.XPATH, "//*[text()='Dashboard']"):
-            logging.info(f"Refreshing in {restart_delay} seconds to check login status.")
-            time.sleep(restart_delay)
+        while wait_for_element_exists(driver, By.XPATH, "//*[text()='Dashboard']"):
+            show_loading_animation(random.randint(1, 3))
 
-        logging.info("Switching back to extensions page...")
+        show_loading_animation(random.randint(1, 3))
+        logging.info('Accessing extension page...')
+        driver.get(f'chrome-extension://{extension_id}/popup.html')
+        
+        while wait_for_element_exists(driver, By.XPATH, "//*[text()='Login']"):
+            show_loading_animation(random.randint(1, 3))
+        
+        logging.info('Login Extension...')
+        button = driver.find_element(By.XPATH, "//*[text()='Login']")
+        button.click()
+
+
         driver.switch_to.window(driver.window_handles[0])
         driver.refresh()
 
-        while not wait_for_element_exists(driver, By.XPATH, "//*[text()='Total Time']"):
+        while not wait_for_element_exists(driver, By.XPATH, "//*[text()='Epoch Earnings:']"):
             logging.info("Refreshing extension page...")
-            time.sleep(random.randint(3, 7))
+            show_loading_animation(random.randint(1, 3))
             driver.refresh()
 
         # Get handles for all windows
