@@ -28,7 +28,7 @@ await chrome.storage.local.get()
 9. Check and Manage the app from Docker Desktop > Containers.
 10. If you're container stuck at any step, please verify your credential.
 # Usage Options
-## A) Use built image from [Docker Hub](https://hub.docker.com/r/kellphy/nodepay)
+## A) Use built image from [Docker Hub](https://hub.docker.com/r/hotrungnhan/bless)
 #### Docker Compose
 ```
 services:
