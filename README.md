@@ -15,7 +15,7 @@
 ```
 services:
   sparkchain:
-    image: hotrungnhan/sparkchain
+    image: hotrungnhan/spark-chain
     restart: unless-stopped
     pull_policy: always
     environment:
@@ -29,7 +29,7 @@ docker run -d \
   --pull always \
   -e EMAIL="your_key" \
   -e PASSWORD="your_key" \
-  hotrungnhan/sparkchain
+  hotrungnhan/spark-chain
 ```
 
 # Credit 
