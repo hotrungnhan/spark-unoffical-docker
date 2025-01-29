@@ -5,7 +5,7 @@ export GIT_REPO=crx-dl
 export PUBLIC_CONTAINER_PATH=hotrungnhan/spark-chain
 
 build: 
-	docker buildx build --build-arg VERSION=${version} -t $(PUBLIC_CONTAINER_PATH):${version} -t $(PUBLIC_CONTAINER_PATH):latest --push .
+	docker buildx build --platform linux/amd64,linux/arm64 --build-arg VERSION=${version} -t $(PUBLIC_CONTAINER_PATH):${version} -t $(PUBLIC_CONTAINER_PATH):latest --push .
 
 test:
   docker run -d \
